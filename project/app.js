@@ -5,7 +5,7 @@
 // Express
 const express = require('express');
 const app = express();
-const PORT = 43817;
+const PORT = 43818;
 
 const exphbs = require('express-handlebars');
 app.engine('hbs', exphbs.engine({ extname: '.hbs' }));
@@ -13,6 +13,18 @@ app.set('view engine', 'hbs');
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// Handlebars helper funcs
+const hbs = exphbs.create({});
+hbs.handlebars.registerHelper('ifCond', function (v1, v2, options) {
+  if (!options || typeof options.fn !== 'function' || typeof options.inverse !== 'function') {
+    console.error("ifCond helper received invalid options:", options);
+    return '';
+  }
+
+  return v1 == v2 ? options.fn(this) : options.inverse(this);
+});
+
 
 // Database
 const db = require('./db-connector');
@@ -28,13 +40,25 @@ app.get('/', (req, res) => {
 
 // Employees route
 app.get('/employees', async (req, res) => {
+    const selected_id = req.query.employee_id
+
     try {
         const [employees] = await db.query('SELECT * FROM Employees');
         const [departments] = await db.query('SELECT * FROM Departments');
         res.render('employees', { employees, departments });
+
+        if (selected_id) {
+          const [[selectedEmployee]] = await db.query(
+            'SELECT * FROM Employees WHERE employee_id = ?',
+            [selected_id]
+          );
+          
+          return res.render('employees', {employees, departments});
+        }
+
     } catch (err) {
         console.error(err);
-        res.status(500).send("Error loading employees");
+        return res.status(500).send("Error loading employees");
     }
 });
 
@@ -72,12 +96,90 @@ app.post('/employees', async (req, res) => {
             department_id
         ]);
 
-        res.redirect('/employees');
+        return res.redirect('/employees');
     } catch (err) {
         console.error("Error inserting employee:", err);
-        res.status(500).send("Error adding employee");
+        return res.status(500).send("Error adding employee");
     }
 });
+
+// Employee Update
+app.get('/employees/edit/:id', async (req, res) => {
+  const employeeId = req.params.id;
+
+  try {
+      const [[employee]] = await db.query(
+          'SELECT * FROM Employees WHERE employee_id = ?',
+          [employeeId]
+      );
+      const [departments] = await db.query('SELECT * FROM Departments');
+
+      if (!employee) {
+          return res.status(404).send("Employee not found");
+      }
+
+      res.render('edit-employee', { employee, departments });
+
+  } catch (err) {
+      console.error("Error loading employee for edit:", err);
+      return res.status(500).send("Error loading employee");
+  }
+});
+
+// Handle form submission
+app.post('/employees/edit/:id', async (req, res) => {
+  const employeeId = req.params.id;
+
+  try {
+      const {
+          first_name,
+          last_name,
+          email,
+          phone,
+          birth_date,
+          hire_date,
+          job_title,
+          salary,
+          status,
+          department_id
+      } = req.body;
+
+      const query = `
+          UPDATE Employees SET
+              first_name = ?,
+              last_name = ?,
+              email = ?,
+              phone = ?,
+              birth_date = ?,
+              hire_date = ?,
+              job_title = ?,
+              salary = ?,
+              status = ?,
+              department_id = ?
+          WHERE employee_id = ?
+      `;
+
+      await db.query(query, [
+          first_name,
+          last_name,
+          email,
+          phone,
+          birth_date,
+          hire_date,
+          job_title,
+          salary,
+          status,
+          department_id,
+          employeeId
+      ]);
+
+      res.redirect('/employees');
+  } catch (err) {
+      console.error("Error updating employee:", err);
+      res.status(500).send("Error updating employee");
+  }
+});
+
   
 // Departments route
 
@@ -189,6 +291,53 @@ app.get('/timeoffs', async (req, res) => {
       console.error('Error submitting time off request:', err);
       res.status(500).send('Error submitting time off request');
     }
+  });
+
+  // Employee Benefits
+  app.get('/employee_benefits', async (req, res) => {
+      try {
+        const [rows] = await db.query(`
+          SELECT 
+            Employees.employee_id,
+            CONCAT(Employees.first_name, ' ', Employees.last_name) AS full_name,
+            Benefits.benefit_id,
+            Benefits.benefit_name,
+            Benefits.description
+          FROM Employees
+          LEFT JOIN Employee_Benefits ON Employees.employee_id = Employee_Benefits.employee_id
+          LEFT JOIN Benefits ON Employee_Benefits.benefit_id = Benefits.benefit_id
+          ORDER BY Employees.employee_id;
+        `);
+
+        const employeeMap = new Map();
+
+        for (const row of rows) {
+          const { employee_id, full_name, benefit_id, benefit_name, description } = row;
+    
+          if (!employeeMap.has(employee_id)) {
+            employeeMap.set(employee_id, {
+              employee_id,
+              full_name,
+              benefits: []
+            });
+          }
+    
+          if (benefit_id) {
+            employeeMap.get(employee_id).benefits.push({
+              benefit_id,
+              benefit_name,
+              description
+            });
+          }
+        }
+    
+        const grouped = Array.from(employeeMap.values());
+    
+        res.render('employee-benefits', { employees: grouped });
+      } catch (err) {
+        console.error("Error loading employee benefits:", err);
+        res.status(500).send("Error loading employee benefits");
+      }
   });
   
   /*

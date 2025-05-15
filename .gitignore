@@ -3,4 +3,5 @@ project/node_modules/
 
 project/package-lock.json
 
-project.zip
+# Contains database password
+project/db-connector.zip
