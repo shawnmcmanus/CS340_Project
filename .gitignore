@@ -1,0 +1,4 @@
+# Ignore node_modules in 'project' folder only
+project/node_modules/
+
+project.zip

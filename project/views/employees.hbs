@@ -1,0 +1,55 @@
+<h2>Employees</h2>
+<table border="1">
+  <tr>
+    <th>ID</th>
+    <th>First Name</th>
+    <th>Last Name</th>
+    <th>Email</th>
+    <th>Phone</th>
+    <th>Birth Date</th>
+    <th>Hire Date</th>
+    <th>Job Title</th>
+    <th>Salary</th>
+    <th>Status</th>
+    <th>Department ID</th>
+  </tr>
+  {{#each employees}}
+  <tr>
+    <td>{{employee_id}}</td>
+    <td>{{first_name}}</td>
+    <td>{{last_name}}</td>
+    <td>{{email}}</td>
+    <td>{{phone}}</td>
+    <td>{{birth_date}}</td>
+    <td>{{hire_date}}</td>
+    <td>{{job_title}}</td>
+    <td>{{salary}}</td>
+    <td>{{status}}</td>
+    <td>{{department_id}}</td>
+  </tr>
+  {{/each}}
+</table>
+
+<h2>Add New Employee</h2>
+<form action="/employees" method="POST">
+  <label>First Name: <input type="text" name="first_name" required></label><br>
+  <label>Last Name: <input type="text" name="last_name" required></label><br>
+  <label>Email: <input type="email" name="email" required></label><br>
+  <label>Phone: <input type="text" name="phone" required></label><br>
+  <label>Birth Date: <input type="date" name="birth_date" required></label><br>
+  <label>Hire Date: <input type="date" name="hire_date" required></label><br>
+  <label>Job Title: <input type="text" name="job_title" required></label><br>
+  <label>Salary: <input type="number" name="salary" required></label><br>
+  <label>Status: <input type="text" name="status" required></label><br>
+  
+  <label>Department:
+    <select name="department_id" required>
+      <option value="" disabled selected>Select department</option>
+      {{#each departments}}
+        <option value="{{department_id}}">{{name}}</option>
+      {{/each}}
+    </select>
+  </label><br>
+
+  <button type="submit">Add Employee</button>
+</form>

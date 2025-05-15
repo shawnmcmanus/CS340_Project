@@ -1,0 +1,34 @@
+<h1>Departments</h1>
+
+<table border="1">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Manager</th>
+      <th>Budget</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each departments}}
+      <tr>
+        <td>{{this.name}}</td>
+        <td>{{this.manager_name}}</td>
+        <td>{{this.budget}}</td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h2>Add New Department</h2>
+<form action="/departments" method="POST">
+  <label for="name">Name:</label>
+  <input type="text" name="name" required><br>
+
+  <label for="manager_name">Manager:</label>
+  <input type="text" name="manager_name"><br>
+
+  <label for="budget">Budget:</label>
+  <input type="number" name="budget"><br>
+
+  <input type="submit" value="Add Department">
+</form>

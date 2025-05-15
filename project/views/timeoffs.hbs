@@ -1,0 +1,52 @@
+<h1>Time Off Requests</h1>
+
+<table border="1">
+  <thead>
+    <tr>
+      <th>Employee</th>
+      <th>Start Date</th>
+      <th>End Date</th>
+      <th>Status</th>
+      <th>Reason</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each timeoffs}}
+      <tr>
+        <td>{{this.first_name}} {{this.last_name}}</td>
+        <td>{{this.start_date}}</td>
+        <td>{{this.end_date}}</td>
+        <td>{{this.status}}</td>
+        <td>{{this.reason}}</td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h2>Request Time Off</h2>
+<form action="/timeoffs" method="POST">
+  <label for="employee_id">Employee:</label>
+  <select name="employee_id" required>
+    {{#each employees}}
+      <option value="{{this.employee_id}}">{{this.first_name}} {{this.last_name}}</option>
+    {{/each}}
+  </select><br>
+
+  <label for="start_date">Start Date:</label>
+  <input type="date" name="start_date" required><br>
+
+  <label for="end_date">End Date:</label>
+  <input type="date" name="end_date" required><br>
+
+  <label for="status">Status:</label>
+  <select name="status" required>
+    <option value="Pending">Pending</option>
+    <option value="Approved">Approved</option>
+    <option value="Denied">Denied</option>
+  </select><br>
+
+  <label for="reason">Reason:</label>
+  <input type="text" name="reason" required><br>
+
+  <input type="submit" value="Submit Request">
+</form>
