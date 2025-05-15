@@ -1,11 +1,12 @@
 <h1>Benefits</h1>
 
-<table border="1">
+<table border="1" cellpadding="8" cellspacing="0">
   <tr>
     <th>Name</th>
     <th>Description</th>
     <th>Cost</th>
     <th>Provider</th>
+    <th>Actions</th>
   </tr>
   {{#each data}}
   <tr>
@@ -13,6 +14,16 @@
     <td>{{description}}</td>
     <td>{{cost}}</td>
     <td>{{provider}}</td>
+    <td>
+      <form action="/employees/update/{{employee_id}}" method="POST" style="display:inline;">
+        <button type="submit">Update</button>
+      </form>
+      
+      <form action="/employees/{{emloyee_id}}/delete" method="POST" style="display:inline;" 
+      onsubmit="return confirm('Are you sure you want to delete this employee?');">
+        <button type="submit">Delete</button>
+      </form>
+    </td>
   </tr>
   {{/each}}
 </table>

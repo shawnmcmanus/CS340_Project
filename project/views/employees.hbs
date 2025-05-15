@@ -1,33 +1,48 @@
-<h2>Employees</h2>
-<table border="1">
-  <tr>
-    <th>ID</th>
-    <th>First Name</th>
-    <th>Last Name</th>
-    <th>Email</th>
-    <th>Phone</th>
-    <th>Birth Date</th>
-    <th>Hire Date</th>
-    <th>Job Title</th>
-    <th>Salary</th>
-    <th>Status</th>
-    <th>Department ID</th>
-  </tr>
-  {{#each employees}}
-  <tr>
-    <td>{{employee_id}}</td>
-    <td>{{first_name}}</td>
-    <td>{{last_name}}</td>
-    <td>{{email}}</td>
-    <td>{{phone}}</td>
-    <td>{{birth_date}}</td>
-    <td>{{hire_date}}</td>
-    <td>{{job_title}}</td>
-    <td>{{salary}}</td>
-    <td>{{status}}</td>
-    <td>{{department_id}}</td>
-  </tr>
-  {{/each}}
+<h1>Employees</h1>
+<table border="1" cellpadding="8" cellspacing="0">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>First Name</th>
+      <th>Last Name</th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th>Birth Date</th>
+      <th>Hire Date</th>
+      <th>Job Title</th>
+      <th>Salary</th>
+      <th>Status</th>
+      <th>Department ID</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each employees}}
+    <tr>
+      <td>{{employee_id}}</td>
+      <td>{{first_name}}</td>
+      <td>{{last_name}}</td>
+      <td>{{email}}</td>
+      <td>{{phone}}</td>
+      <td>{{birth_date}}</td>
+      <td>{{hire_date}}</td>
+      <td>{{job_title}}</td>
+      <td>{{salary}}</td>
+      <td>{{status}}</td>
+      <td>{{department_id}}</td>
+      <td>
+        <a href="/employees/edit/{{employee_id}}">
+          <button type="button">Update</button>
+        </a>
+
+        <form action="/employees/{{employee_id}}/delete" method="POST" style="display:inline;" 
+        onsubmit="return confirm('Are you sure you want to delete this employee?');">
+          <button type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {{/each}}
+  </tbody>
 </table>
 
 <h2>Add New Employee</h2>
@@ -53,3 +68,4 @@
 
   <button type="submit">Add Employee</button>
 </form>
+

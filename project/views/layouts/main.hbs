@@ -2,8 +2,46 @@
 <html>
   <head>
     <title>Employee Management System</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+
+      nav {
+        background-color: #333;
+        padding: 10px;
+      }
+
+      nav a {
+        color: white;
+        margin-right: 15px;
+        text-decoration: none;
+      }
+
+      nav a:hover {
+        text-decoration: underline;
+      }
+
+      .container {
+        padding: 20px;
+      }
+    </style>
   </head>
   <body>
-    {{{body}}}
+    <nav>
+      <a href="/">Home</a>
+      <a href="/employees">Employees</a>
+      <a href="/departments">Departments</a>
+      <a href="/benefits">Benefits</a>
+      <a href="/payrolls">Payrolls</a>
+      <a href="/timeoffs">Time Offs</a>
+      <a href="/employee_benefits">Employee Benefits</a>
+    </nav>
+
+    <div class="container">
+      {{{body}}}
+    </div>
   </body>
 </html>
