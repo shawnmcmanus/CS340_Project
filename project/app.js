@@ -180,6 +180,19 @@ app.post('/employees/edit/:id', async (req, res) => {
   }
 });
 
+// Employee Delete
+app.post('/employees/:id/delete', async (req, res) => {
+  const employeeId = req.params.id;
+
+  try {
+    await db.query(`DELETE FROM Employees WHERE employee_id = ?`, [employeeId]);
+    res.redirect('/employees');
+  } catch (err) {
+    console.error("Error deleting employee:", err);
+    res.status(500).send("Error deleting employee.");
+  }
+});
+
   
 // Departments route
 
