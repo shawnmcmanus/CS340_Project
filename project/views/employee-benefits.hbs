@@ -1,0 +1,78 @@
+<h2>Employee Benefits</h2>
+<table border="1" cellpadding="8" cellspacing="0">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Full Name</th>
+      <th>Benefits</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each employees}}
+    <tr>
+      <td>{{employee_id}}</td>
+      <td>{{full_name}}</td>
+      <td>
+        {{#if benefits.length}}
+          <ul>
+            {{#each benefits}}
+              <li>
+                {{benefit_name}} - {{description}}
+
+                <!-- Update Form -->
+                <form 
+                  action="/employee_benefits/edit/{{benefit_id}}" 
+                  method="POST" 
+                  style="display:inline; margin-left: 10px;"
+                >
+                  <input type="hidden" name="employee_id" value="{{../employee_id}}">
+
+                  <select name="new_benefit_id" required>
+                    {{#each ../../allBenefits}}
+                      <option value="{{benefit_id}}">{{benefit_name}}</option>
+                    {{/each}}
+                  </select>
+
+                  <button type="submit">Update</button>
+                </form>
+
+                <!-- Delete Form -->
+                <form 
+                  action="/employee_benefits/delete/{{benefit_id}}" 
+                  method="POST" 
+                  style="display:inline;" 
+                  onsubmit="return confirm('Are you sure you want to remove this benefit from the employee?');"
+                >
+                  <input type="hidden" name="employee_id" value="{{../employee_id}}">
+                  <button type="submit">Delete</button>
+                </form>
+              </li>
+            {{/each}}
+          </ul>
+        {{else}}
+          No benefits
+        {{/if}}
+      </td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h3>Assign a Benefit to an Employee</h3>
+<form action="/employee_benefits" method="POST">
+  <label for="employee_id">Employee:</label>
+  <select name="employee_id" required>
+    {{#each allEmployees}}
+      <option value="{{employee_id}}">{{full_name}}</option>
+    {{/each}}
+  </select>
+
+  <label for="benefit_id">Benefit:</label>
+  <select name="benefit_id" required>
+    {{#each allBenefits}}
+      <option value="{{benefit_id}}">{{benefit_name}}</option>
+    {{/each}}
+  </select>
+
+  <button type="submit">Add Benefit</button>
+</form>

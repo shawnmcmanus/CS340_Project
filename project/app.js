@@ -183,14 +183,59 @@ app.post('/employees/edit/:id', async (req, res) => {
   
 // Departments route
 
-app.get('/departments', async function(req, res) {
-    try {
-        const [departments] = await db.query("SELECT * FROM Departments");
-        res.render('departments', { departments });
-    } catch (err) {
-        console.error("Error loading departments page:", err);
-        res.status(500).send("Error loading departments page.");
+app.get('/departments', async function (req, res) {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        Departments.department_id,
+        Departments.name AS department_name,
+        Departments.manager_name,
+        Departments.budget,
+        Employees.employee_id,
+        CONCAT(Employees.first_name, ' ', Employees.last_name) AS employee_name
+      FROM Departments
+      LEFT JOIN Employees ON Departments.department_id = Employees.department_id
+      ORDER BY Departments.department_id;
+    `);
+
+    // Group by department
+    const deptMap = new Map();
+
+    for (const row of rows) {
+      const {
+        department_id,
+        department_name,
+        manager_name,
+        budget,
+        employee_id,
+        employee_name
+      } = row;
+
+      if (!deptMap.has(department_id)) {
+        deptMap.set(department_id, {
+          department_id,
+          department_name,
+          manager_name,
+          budget,
+          employees: []
+        });
+      }
+
+      if (employee_id) {
+        deptMap.get(department_id).employees.push({
+          employee_id,
+          employee_name
+        });
+      }
     }
+
+    const departments = Array.from(deptMap.values());
+
+    res.render('departments', { departments });
+  } catch (err) {
+    console.error("Error loading departments page:", err);
+    res.status(500).send("Error loading departments page.");
+  }
 });
 
 app.post('/departments', async function(req, res) {
@@ -295,50 +340,131 @@ app.get('/timeoffs', async (req, res) => {
 
   // Employee Benefits
   app.get('/employee_benefits', async (req, res) => {
-      try {
-        const [rows] = await db.query(`
-          SELECT 
-            Employees.employee_id,
-            CONCAT(Employees.first_name, ' ', Employees.last_name) AS full_name,
-            Benefits.benefit_id,
-            Benefits.benefit_name,
-            Benefits.description
-          FROM Employees
-          LEFT JOIN Employee_Benefits ON Employees.employee_id = Employee_Benefits.employee_id
-          LEFT JOIN Benefits ON Employee_Benefits.benefit_id = Benefits.benefit_id
-          ORDER BY Employees.employee_id;
-        `);
-
-        const employeeMap = new Map();
-
-        for (const row of rows) {
-          const { employee_id, full_name, benefit_id, benefit_name, description } = row;
-    
-          if (!employeeMap.has(employee_id)) {
-            employeeMap.set(employee_id, {
-              employee_id,
-              full_name,
-              benefits: []
-            });
-          }
-    
-          if (benefit_id) {
-            employeeMap.get(employee_id).benefits.push({
-              benefit_id,
-              benefit_name,
-              description
-            });
-          }
+    try {
+      // Fetch employee-benefit relationships
+      const [rows] = await db.query(`
+        SELECT 
+          Employees.employee_id,
+          CONCAT(Employees.first_name, ' ', Employees.last_name) AS full_name,
+          Benefits.benefit_id,
+          Benefits.benefit_name,
+          Benefits.description
+        FROM Employees
+        LEFT JOIN Employee_Benefits ON Employees.employee_id = Employee_Benefits.employee_id
+        LEFT JOIN Benefits ON Employee_Benefits.benefit_id = Benefits.benefit_id
+        ORDER BY Employees.employee_id;
+      `);
+  
+      // Fetch all employees for the <select>
+      const [allEmployees] = await db.query(`
+        SELECT employee_id, CONCAT(first_name, ' ', last_name) AS full_name FROM Employees;
+      `);
+  
+      // Fetch all benefits for the <select>
+      const [allBenefits] = await db.query(`
+        SELECT benefit_id, benefit_name FROM Benefits;
+      `);
+  
+      // Group benefits by employee
+      const employeeMap = new Map();
+      for (const row of rows) {
+        const { employee_id, full_name, benefit_id, benefit_name, description } = row;
+  
+        if (!employeeMap.has(employee_id)) {
+          employeeMap.set(employee_id, {
+            employee_id,
+            full_name,
+            benefits: []
+          });
         }
-    
-        const grouped = Array.from(employeeMap.values());
-    
-        res.render('employee-benefits', { employees: grouped });
-      } catch (err) {
-        console.error("Error loading employee benefits:", err);
-        res.status(500).send("Error loading employee benefits");
+  
+        if (benefit_id) {
+          employeeMap.get(employee_id).benefits.push({
+            benefit_id,
+            benefit_name,
+            description
+          });
+        }
       }
+  
+      const grouped = Array.from(employeeMap.values());
+  
+      res.render('employee-benefits', {
+        employees: grouped,
+        allEmployees,
+        allBenefits
+      });
+    } catch (err) {
+      console.error("Error loading employee benefits:", err);
+      res.status(500).send("Error loading employee benefits");
+    }
   });
+  
+
+app.post('/employee_benefits', async (req, res) => {
+  const { employee_id, benefit_id } = req.body;
+
+  try {
+    // Check if this relationship already exists to prevent duplicates
+    const [existing] = await db.query(`
+      SELECT * FROM Employee_Benefits
+      WHERE employee_id = ? AND benefit_id = ?
+    `, [employee_id, benefit_id]);
+
+    if (existing.length > 0) {
+      return res.status(400).send("This benefit is already assigned to the employee.");
+    }
+
+    // Insert into the M:M relationship table
+    await db.query(`
+      INSERT INTO Employee_Benefits (employee_id, benefit_id)
+      VALUES (?, ?)
+    `, [employee_id, benefit_id]);
+
+    res.redirect('/employee_benefits');
+  } catch (err) {
+    console.error("Error inserting employee benefit:", err);
+    res.status(500).send("Failed to assign benefit.");
+  }
+});
+
+app.post('/employee_benefits/edit/:old_benefit_id', async (req, res) => {
+  const { employee_id, new_benefit_id } = req.body;
+  const { old_benefit_id } = req.params;
+
+  try {
+    // Optional: check if the new assignment already exists
+    // Update the benefit for this employee
+    await db.query(`
+      UPDATE Employee_Benefits
+      SET benefit_id = ?
+      WHERE employee_id = ? AND benefit_id = ?
+    `, [new_benefit_id, employee_id, old_benefit_id]);
+
+    res.redirect('/employee_benefits');
+  } catch (err) {
+    console.error("Error updating employee benefit:", err);
+    res.status(500).send("Failed to update benefit.");
+  }
+});
+
+app.post('/employee_benefits/delete/:benefit_id', async (req, res) => {
+  const { employee_id } = req.body;
+  const { benefit_id } = req.params;
+
+  try {
+    await db.query(`
+      DELETE FROM Employee_Benefits
+      WHERE employee_id = ? AND benefit_id = ?
+    `, [employee_id, benefit_id]);
+
+    res.redirect('/employee_benefits');
+  } catch (err) {
+    console.error("Error deleting employee benefit:", err);
+    res.status(500).send("Failed to delete benefit.");
+  }
+});
+
   
   /*
       LISTENER

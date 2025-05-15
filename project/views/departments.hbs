@@ -6,29 +6,27 @@
       <th>Name</th>
       <th>Manager</th>
       <th>Budget</th>
+      <th>Employees</th>
     </tr>
   </thead>
   <tbody>
     {{#each departments}}
       <tr>
-        <td>{{this.name}}</td>
-        <td>{{this.manager_name}}</td>
-        <td>{{this.budget}}</td>
+        <td>{{department_name}}</td>
+        <td>{{manager_name}}</td>
+        <td>${{budget}}</td>
+        <td>
+          {{#if employees.length}}
+            <ul>
+              {{#each employees}}
+                <li>{{employee_name}}</li>
+              {{/each}}
+            </ul>
+          {{else}}
+            No employees
+          {{/if}}
+        </td>
       </tr>
     {{/each}}
   </tbody>
 </table>
-
-<h2>Add New Department</h2>
-<form action="/departments" method="POST">
-  <label for="name">Name:</label>
-  <input type="text" name="name" required><br>
-
-  <label for="manager_name">Manager:</label>
-  <input type="text" name="manager_name"><br>
-
-  <label for="budget">Budget:</label>
-  <input type="number" name="budget"><br>
-
-  <input type="submit" value="Add Department">
-</form>
