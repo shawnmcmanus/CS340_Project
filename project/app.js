@@ -478,7 +478,16 @@ app.post('/employee_benefits/delete/:benefit_id', async (req, res) => {
   }
 });
 
-  
+app.post('/reset', async (req, res) => {
+  try {
+    await db.query("CALL sp_reset_database()");
+    res.redirect('/');
+  } catch (err) {
+    console.error("RESET failed:", err);
+    res.status(500).send("RESET failed");
+  }
+});
+
   /*
       LISTENER
   */
