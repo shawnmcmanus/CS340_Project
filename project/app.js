@@ -185,7 +185,7 @@ app.post('/employees/:id/delete', async (req, res) => {
   const employeeId = req.params.id;
 
   try {
-    await db.query(`DELETE FROM Employees WHERE employee_id = ?`, [employeeId]);
+    await db.query("CALL sp_delete_employee(?)", [employeeId]); // USES SP
     res.redirect('/employees');
   } catch (err) {
     console.error("Error deleting employee:", err);
