@@ -38,6 +38,13 @@
       <a href="/payrolls">Payrolls</a>
       <a href="/timeoffs">Time-Offs</a>
       <a href="/employee_benefits">Employee Benefits</a>
+
+      <form action="/reset" method="POST" style="display:inline;">
+        <button style="color:white; background:none; border:none; cursor:pointer;" 
+          onclick="return confirm('Are you sure you want to reset the database?')">
+          RESET
+        </button>
+      </form>
     </nav>
 
     <div class="container">
