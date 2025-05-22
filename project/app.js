@@ -185,7 +185,7 @@ app.post('/employees/:id/delete', async (req, res) => {
   const employeeId = req.params.id;
 
   try {
-    await db.query(`DELETE FROM Employees WHERE employee_id = ?`, [employeeId]);
+    await db.query("CALL sp_delete_employee(?)", [employeeId]); // USES SP
     res.redirect('/employees');
   } catch (err) {
     console.error("Error deleting employee:", err);
@@ -202,7 +202,6 @@ app.get('/departments', async function (req, res) {
       SELECT 
         Departments.department_id,
         Departments.name AS department_name,
-        Departments.manager_name,
         Departments.budget,
         Employees.employee_id,
         CONCAT(Employees.first_name, ' ', Employees.last_name) AS employee_name
@@ -218,7 +217,6 @@ app.get('/departments', async function (req, res) {
       const {
         department_id,
         department_name,
-        manager_name,
         budget,
         employee_id,
         employee_name
@@ -228,7 +226,6 @@ app.get('/departments', async function (req, res) {
         deptMap.set(department_id, {
           department_id,
           department_name,
-          manager_name,
           budget,
           employees: []
         });
@@ -256,8 +253,8 @@ app.post('/departments', async function(req, res) {
 
     try {
         await db.query(
-            "INSERT INTO Departments (name, manager_name, budget) VALUES (?, ?, ?)",
-            [name, manager_name, budget]
+            "INSERT INTO Departments (name, budget) VALUES (?, ?)",
+            [name, budget]
         );
         res.redirect('/departments');
     } catch (err) {
@@ -478,7 +475,16 @@ app.post('/employee_benefits/delete/:benefit_id', async (req, res) => {
   }
 });
 
-  
+app.post('/reset', async (req, res) => {
+  try {
+    await db.query("CALL sp_reset_database()");
+    res.redirect('/');
+  } catch (err) {
+    console.error("RESET failed:", err);
+    res.status(500).send("RESET failed");
+  }
+});
+
   /*
       LISTENER
   */
