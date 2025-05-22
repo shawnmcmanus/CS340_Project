@@ -15,8 +15,8 @@
     {{#each payrolls}}
       <tr>
         <td>{{this.first_name}} {{this.last_name}}</td>
-        <td>{{this.pay_period}}</td>
-        <td>{{this.pay_date}}</td>
+        <td>{{formatDate this.pay_period}}</td>
+        <td>{{formatDate this.pay_date}}</td>
         <td>{{this.gross_pay}}</td>
         <td>{{this.deduction}}</td>
         <td>{{this.net_pay}}</td>

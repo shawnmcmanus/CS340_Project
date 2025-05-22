@@ -8,6 +8,7 @@ const app = express();
 const PORT = 43818;
 
 const exphbs = require('express-handlebars');
+const moment = require('moment');
 app.engine('hbs', exphbs.engine({ extname: '.hbs' }));
 app.set('view engine', 'hbs');
 
@@ -25,6 +26,9 @@ hbs.handlebars.registerHelper('ifCond', function (v1, v2, options) {
   return v1 == v2 ? options.fn(this) : options.inverse(this);
 });
 
+hbs.handlebars.registerHelper('formatDate', function(date) {
+  return moment(date).format('MMMM D, YYYY');
+});
 
 // Database
 const db = require('./db-connector');
