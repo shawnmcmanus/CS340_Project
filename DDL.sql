@@ -18,9 +18,8 @@ BEGIN
 
     CREATE TABLE Departments (
         department_id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(50) NOT NULL UNIQUE,
-        manager_name VARCHAR(50),
-        budget INT
+        `name` VARCHAR(50) NOT NULL UNIQUE,
+        budget INT,
     );
 
     CREATE TABLE Benefits (
@@ -41,7 +40,7 @@ BEGIN
         hire_date DATE NOT NULL,
         job_title VARCHAR(50) NOT NULL,
         salary INT NOT NULL,
-        status VARCHAR(20) NOT NULL,
+        `status` VARCHAR(20) NOT NULL,
         department_id INT,
         FOREIGN KEY (department_id) REFERENCES Departments(department_id)
             ON DELETE SET NULL ON UPDATE CASCADE
@@ -51,7 +50,7 @@ BEGIN
         time_off_id INT AUTO_INCREMENT PRIMARY KEY,
         start_date DATE NOT NULL,
         end_date DATE NOT NULL,
-        status VARCHAR(20) NOT NULL,
+        `status` VARCHAR(20) NOT NULL,
         reason VARCHAR(100) NOT NULL,
         employee_id INT,
         FOREIGN KEY (employee_id) REFERENCES Employees(employee_id)
@@ -80,23 +79,30 @@ BEGIN
             ON DELETE CASCADE ON UPDATE CASCADE
     );
 
-    INSERT INTO Departments (name, manager_name, budget) VALUES 
-    ('Human Resources', 'Alice Johnson', 500000),
-    ('Engineering', 'Bob Smith', 2000000),
-    ('Sales', 'Betty White', 1000000);
+    INSERT INTO Departments (`name`, budget) VALUES 
+    ('Human Resources', 500000),
+    ('Engineering', 2000000),
+    ('Sales', 1000000);
 
     INSERT INTO Benefits (benefit_name, description, cost, provider) VALUES 
     ('Health Insurance', 'Covers medical expenses', 250.00, 'Blue Cross'),
     ('Dental Plan', 'Covers dental expenses', 75.00, 'Delta Dental'),
     ('Retirement 401k', 'Company retirement plan', 0.00, 'Fidelity');
 
-    INSERT INTO Employees (first_name, last_name, email, phone, birth_date, hire_date, job_title, salary, status, department_id) VALUES 
+    INSERT INTO Employees (first_name, last_name, email, phone, birth_date, hire_date, job_title, salary, `status`, department_id) VALUES 
     ('John', 'Doe', 'john.doe@company.com', '123-456-7890', '1985-04-12', '2010-06-01', 'Software Engineer', 95000, 'Active',
-      (SELECT department_id FROM Departments WHERE name = 'Engineering')),
+      (SELECT department_id FROM Departments WHERE `name` = 'Engineering')),
     ('Jane', 'Smith', 'jane.smith@company.com', '234-567-8901', '1990-08-20', '2015-09-15', 'HR Manager', 85000, 'Active',
-      (SELECT department_id FROM Departments WHERE name = 'Human Resources')),
+      (SELECT department_id FROM Departments WHERE `name` = 'Human Resources')),
     ('Mike', 'Jones', 'mike.jones@company.com', '345-678-9012', '1975-02-28', '2005-01-10', 'Sales Lead', 80000, 'Active',
-      (SELECT department_id FROM Departments WHERE name = 'Sales'));
+      (SELECT department_id FROM Departments WHERE `name` = 'Sales')),
+    ('Betty', 'White', 'betty.white@company.com', '777-555-1234', '1945-05-18', '2020-03-12', 'Sales Manager', 100000, 'Active',
+      (SELECT department_id FROM Departments WHERE `name` = 'Sales')),
+    ('Alice', 'Johnson', 'alice.johnson@company.com', '201-867-5309', '1985-02-26', '2018-10-02', 'Head of HR', 120000, 'Active',
+      (SELECT department_id FROM Departments WHERE `name` = 'Human Resources')),
+    ('Bob', 'Smith', 'bob.smith@company.com', '569-368-6842', '1967-09-03', '2022-12-01', 'Software Engineer Lead', 150000, 'Active',
+      (SELECT department_id FROM Departments WHERE `name` = 'Engineering'));
+    
 
     INSERT INTO Time_Offs (start_date, end_date, status, reason, employee_id) VALUES 
     ('2025-06-01', '2025-06-10', 'Approved', 'Vacation',
