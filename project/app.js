@@ -1,3 +1,10 @@
+/* 
+SOURCES: Used ChatGPT to help add proper date formatting
+and to implement the new stored procs from pl.sql
+Ex: Given the following date [paste date], how could I
+go about making it the format January 1, 2000
+*/
+
 /*
     SETUP
 */
@@ -26,6 +33,7 @@ hbs.handlebars.registerHelper('ifCond', function (v1, v2, options) {
   return v1 == v2 ? options.fn(this) : options.inverse(this);
 });
 
+// Used to format dates correctly
 hbs.handlebars.registerHelper('formatDate', function(date) {
   return moment(date).format('MMMM D, YYYY');
 });
