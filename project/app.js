@@ -189,7 +189,7 @@ app.post('/employees/:id/delete', async (req, res) => {
   const employeeId = req.params.id;
 
   try {
-    await db.query("CALL sp_delete_employee(?)", [employeeId]); // USES SP
+    await db.query("CALL sp_delete_employee(?)", [employeeId]);
     res.redirect('/employees');
   } catch (err) {
     console.error("Error deleting employee:", err);
@@ -267,10 +267,22 @@ app.post('/departments', async function(req, res) {
     }
 });
 
+app.post('/delete-department/:id', async (req, res) => {
+    const deptId = req.params.id;
+
+    try {
+      await db.query('CALL sp_delete_department(?)', [deptId]);
+      res.redirect('/departments');
+    } catch (err) {
+      console.error('Failed to delete department:', err);
+      res.status(500).send('Error deleting department');
+    }
+});
+
 // Benefits route
 app.get('/benefits', async function (req, res) {
     try {
-        const [rows] = await db.query('SELECT benefit_name, description, cost, provider FROM Benefits');
+        const [rows] = await db.query('SELECT benefit_id, benefit_name, description, cost, provider FROM Benefits');
         res.render('benefits', { data: rows });
     } catch (err) {
         console.error("Error loading benefits page:", err);
@@ -293,6 +305,18 @@ app.post('/benefits', async (req, res) => {
       res.status(500).send('Error adding benefit');
     }
   });
+
+app.post('/delete-benefit/:id', async (req, res) => {
+    const benefit_id = req.params.id;
+
+    try {
+      await db.query('CALL sp_delete_benefit(?)', [benefit_id]);
+      res.redirect('/benefits');
+    } catch (error) {
+      console.error('Failed to delete benefit:', error);
+      res.status(500).send('An error occurred while deleting the benefit.');
+    }
+});
   
 // Payolls route
 app.get('/payrolls', async (req, res) => {
@@ -447,13 +471,9 @@ app.post('/employee_benefits/edit/:old_benefit_id', async (req, res) => {
   const { old_benefit_id } = req.params;
 
   try {
-    // Optional: check if the new assignment already exists
-    // Update the benefit for this employee
     await db.query(`
-      UPDATE Employee_Benefits
-      SET benefit_id = ?
-      WHERE employee_id = ? AND benefit_id = ?
-    `, [new_benefit_id, employee_id, old_benefit_id]);
+      CALL sp_update_employee_benefit(?, ?, ?)
+    `, [employee_id, old_benefit_id, new_benefit_id]);
 
     res.redirect('/employee_benefits');
   } catch (err) {
@@ -468,8 +488,7 @@ app.post('/employee_benefits/delete/:benefit_id', async (req, res) => {
 
   try {
     await db.query(`
-      DELETE FROM Employee_Benefits
-      WHERE employee_id = ? AND benefit_id = ?
+      CALL sp_delete_employee_benefit(?, ?)
     `, [employee_id, benefit_id]);
 
     res.redirect('/employee_benefits');
@@ -479,6 +498,7 @@ app.post('/employee_benefits/delete/:benefit_id', async (req, res) => {
   }
 });
 
+// Reset database
 app.post('/reset', async (req, res) => {
   try {
     await db.query("CALL sp_reset_database()");

@@ -147,3 +147,217 @@ BEGIN
 END //
 
 DELIMITER ;
+
+-- Procedure to delete a department
+DROP PROCEDURE IF EXISTS sp_delete_department;
+
+DELIMITER //
+
+CREATE PROCEDURE sp_delete_department(IN dept_id INT)
+BEGIN
+    DELETE FROM Departments WHERE department_id = dept_id;
+END //
+
+DELIMITER ;
+
+-- Procedure to delete a benefit
+DROP PROCEDURE IF EXISTS sp_delete_benefit;
+
+DELIMITER //
+
+CREATE PROCEDURE sp_delete_benefit(IN p_benefit_id INT)
+BEGIN
+    DELETE FROM Employee_Benefits WHERE benefit_id = p_benefit_id;
+    DELETE FROM Benefits WHERE benefit_id = p_benefit_id;
+END //
+
+DELIMITER ;
+
+-- Procedure to delete a payroll
+DROP PROCEDURE IF EXISTS sp_delete_payroll;
+
+DELIMITER //
+
+CREATE PROCEDURE sp_delete_payroll(IN payroll_id INT)
+BEGIN
+    DELETE FROM Payrolls WHERE payroll_id = payroll_id;
+END //
+
+DELIMITER ;
+
+-- Procedure to delete a time off
+DROP PROCEDURE IF EXISTS sp_delete_time_off;
+
+DELIMITER //
+
+CREATE PROCEDURE sp_delete_time_off(IN time_off_id INT)
+BEGIN
+    DELETE FROM Time_Offs WHERE time_off_id = time_off_id;
+END //
+
+DELIMITER ;
+
+-- Procedure to delete an employee benefit
+DROP PROCEDURE IF EXISTS sp_delete_employee_benefit;
+
+DELIMITER //
+
+CREATE PROCEDURE sp_delete_employee_benefit(IN emp_id INT, IN ben_id INT)
+BEGIN
+    DELETE FROM Employee_Benefits
+    WHERE employee_id = emp_id AND benefit_id = ben_id;
+END //
+
+DELIMITER ;
+
+-- Procedure to update an employee
+DROP PROCEDURE IF EXISTS sp_update_employee;
+
+DELIMITER //
+
+CREATE PROCEDURE sp_update_employee(
+    IN emp_id INT,
+    IN first_name VARCHAR(100),
+    IN last_name VARCHAR(100),
+    IN email VARCHAR(100),
+    IN phone VARCHAR(25),
+    IN birth_date DATE,
+    IN hire_date DATE,
+    IN job_title VARCHAR(100),
+    IN salary INT,
+    IN status VARCHAR(20),
+    IN department_id INT
+)
+BEGIN
+    UPDATE Employees
+    SET
+        first_name = first_name,
+        last_name = last_name,
+        email = email,
+        phone = phone,
+        birth_date = birth_date,
+        hire_date = hire_date,
+        job_title = job_title,
+        salary = salary,
+        status = status,
+        department_id = department_id
+    WHERE employee_id = emp_id;
+END //
+
+DELIMITER ;
+
+-- Procedure to update a department
+DROP PROCEDURE IF EXISTS sp_update_department;
+
+DELIMITER //
+
+CREATE PROCEDURE sp_update_department(
+    IN dept_id INT,
+    IN dept_name VARCHAR(100),
+    IN dept_budget INT
+)
+BEGIN
+    UPDATE Departments
+    SET
+        name = dept_name,
+        budget = dept_budget
+    WHERE department_id = dept_id;
+END //
+
+DELIMITER ;
+
+-- Procedure to update a benefit
+DROP PROCEDURE IF EXISTS sp_update_benefit;
+
+DELIMITER //
+
+CREATE PROCEDURE sp_update_benefit(
+    IN benefit_id INT,
+    IN benefit_name VARCHAR(100),
+    IN description VARCHAR(255),
+    IN cost DECIMAL(10, 2),
+    IN provider VARCHAR(100)
+)
+BEGIN
+    UPDATE Benefits
+    SET
+        benefit_name = benefit_name,
+        description = description,
+        cost = cost,
+        provider = provider
+    WHERE benefit_id = benefit_id;
+END //
+
+DELIMITER ;
+
+-- Procedure to update a payroll
+DROP PROCEDURE IF EXISTS sp_update_payroll;
+
+DELIMITER //
+
+CREATE PROCEDURE sp_update_payroll(
+    IN payroll_id INT,
+    IN pay_period DATE,
+    IN pay_date DATE,
+    IN gross_pay DECIMAL(10, 2),
+    IN deduction DECIMAL(10, 2),
+    IN net_pay DECIMAL(10, 2),
+    IN employee_id INT
+)
+BEGIN
+    UPDATE Payrolls
+    SET
+        pay_period = pay_period,
+        pay_date = pay_date,
+        gross_pay = gross_pay,
+        deduction = deduction,
+        net_pay = net_pay,
+        employee_id = employee_id
+    WHERE payroll_id = payroll_id;
+END //
+
+DELIMITER ;
+
+-- Procedure to update a time off
+DROP PROCEDURE IF EXISTS sp_update_time_off;
+
+DELIMITER //
+
+CREATE PROCEDURE sp_update_time_off(
+    IN time_off_id INT,
+    IN start_date DATE,
+    IN end_date DATE,
+    IN status VARCHAR(20),
+    IN reason VARCHAR(255),
+    IN employee_id INT
+)
+BEGIN
+    UPDATE Time_Offs
+    SET
+        start_date = start_date,
+        end_date = end_date,
+        status = status,
+        reason = reason,
+        employee_id = employee_id
+    WHERE time_off_id = time_off_id;
+END //
+
+DELIMITER ;
+
+-- Procedure to update an employee benefit
+DROP PROCEDURE IF EXISTS sp_update_employee_benefit;
+
+DELIMITER //
+
+CREATE PROCEDURE sp_update_employee_benefit(
+    IN p_employee_id INT,
+    IN p_old_benefit_id INT,
+    IN p_new_benefit_id INT
+)
+BEGIN
+    UPDATE Employee_Benefits
+    SET benefit_id = p_new_benefit_id
+    WHERE employee_id = p_employee_id AND benefit_id = p_old_benefit_id;
+END //
+
+DELIMITER ;
