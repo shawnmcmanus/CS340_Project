@@ -1,50 +1,40 @@
+<!-- SOURCE: Used ChatGPT to help with formatting and the update form -->
+<!-- Employee Benefits Page (M:N relation) -->
+
 <h1>Employee Benefits</h1>
 <table border="1" cellpadding="8" cellspacing="0">
   <thead>
     <tr>
       <th>ID</th>
       <th>Full Name</th>
-      <th>Benefits</th>
+      <th class="actions-header">Benefits</th>
     </tr>
   </thead>
   <tbody>
     {{#each employees}}
     <tr>
-      <td>{{employee_id}}</td>
-      <td>{{full_name}}</td>
-      <td>
+      <td class="actions-cell">{{employee_id}}</td>
+      <td class="actions-cell">{{full_name}}</td>
+      <td class="actions-cell">
         {{#if benefits.length}}
           <ul>
             {{#each benefits}}
               <li>
                 {{benefit_name}} - {{description}}
 
-                <!-- Update Form -->
-                <form 
-                  action="/employee_benefits/edit/{{benefit_id}}" 
-                  method="POST" 
-                  style="display:inline; margin-left: 10px;"
+                <button 
+                  class="update-btn" 
+                  type="button" 
+                  data-employee-id="{{../employee_id}}" 
+                  data-benefit-id="{{benefit_id}}"
+                  data-eb-id="{{employee_benefit_id}}"
                 >
+                  Update
+                </button>
+
+                <form action="/employee_benefits/delete/{{benefit_id}}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to remove this benefit from the employee?');">
                   <input type="hidden" name="employee_id" value="{{../employee_id}}">
-
-                  <select name="new_benefit_id" required>
-                    {{#each ../../allBenefits}}
-                      <option value="{{benefit_id}}">{{benefit_name}}</option>
-                    {{/each}}
-                  </select>
-
-                  <button type="submit">Update</button>
-                </form>
-
-                <!-- Delete Form -->
-                <form 
-                  action="/employee_benefits/delete/{{benefit_id}}" 
-                  method="POST" 
-                  style="display:inline;" 
-                  onsubmit="return confirm('Are you sure you want to remove this benefit from the employee?');"
-                >
-                  <input type="hidden" name="employee_id" value="{{../employee_id}}">
-                  <button type="submit">Delete</button>
+                  <button class="delete-btn" type="submit" class="delete-btn">Delete</button>
                 </form>
               </li>
             {{/each}}
@@ -58,6 +48,8 @@
   </tbody>
 </table>
 
+
+<!-- Creates a new benefit for an employee -->
 <h3>Assign a Benefit to an Employee</h3>
 <form action="/employee_benefits" method="POST">
   <label for="employee_id">Employee:</label>
@@ -76,3 +68,69 @@
 
   <button type="submit">Add Benefit</button>
 </form>
+
+
+<!-- Handles the formatting of the update form -->
+<div id="modalOverlay" style="display: none;">
+  <div id="editModal">
+    <form id="editForm" method="POST">
+      <h2>Edit Employee Benefit</h2>
+
+      <input type="hidden" name="employee_benefit_id" id="edit-eb-id">
+
+      <input type="hidden" name="new_employee_id" id="edit-employee-id">
+
+      <label for="new_benefit_id">Benefit:</label>
+      <select name="new_benefit_id" id="edit-new-benefit-id" required>
+        {{#each allBenefits}}
+          <option value="{{benefit_id}}">{{benefit_name}}</option>
+        {{/each}}
+      </select>
+
+      <div style="margin-top: 20px;">
+        <button type="submit">Save</button>
+        <button type="button" id="closeModalBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- Handles the info from the update form -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('modalOverlay');
+    const editForm = document.getElementById('editForm');
+    const closeBtn = document.getElementById('closeModalBtn');
+    const newBenefitSelect = document.getElementById('edit-new-benefit-id');
+    const employeeIdInput = document.getElementById('edit-employee-id');
+    const oldBenefitIdInput = document.getElementById('edit-old-benefit-id');
+
+    document.querySelectorAll('.update-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const employeeId = button.getAttribute('data-employee-id');
+        const benefitId = button.getAttribute('data-benefit-id');
+        const ebId = button.getAttribute('data-eb-id');
+
+        document.getElementById('edit-employee-id').value = employeeId;
+        document.getElementById('edit-eb-id').value = ebId;
+        document.getElementById('edit-new-benefit-id').value = benefitId;
+
+        editForm.action = `/employee_benefits/edit/${ebId}`;
+
+        modal.style.display = 'block';
+      });
+    });
+
+
+    closeBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  });
+</script>

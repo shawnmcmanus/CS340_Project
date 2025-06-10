@@ -21,6 +21,7 @@ app.set('view engine', 'hbs');
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(express.static('public'));
 
 // Handlebars helper funcs
 const hbs = exphbs.create({});
@@ -33,9 +34,16 @@ hbs.handlebars.registerHelper('ifCond', function (v1, v2, options) {
   return v1 == v2 ? options.fn(this) : options.inverse(this);
 });
 
-// Used to format dates correctly
 hbs.handlebars.registerHelper('formatDate', function(date) {
   return moment(date).format('MMMM D, YYYY');
+});
+
+hbs.handlebars.registerHelper('eq', function (a, b) {
+  return a == b;
+});
+
+hbs.handlebars.registerHelper('json', function (context) {
+  return JSON.stringify(context);
 });
 
 // Database
@@ -75,129 +83,42 @@ app.get('/employees', async (req, res) => {
 });
 
 app.post('/employees', async (req, res) => {
-    try {
-        const {
-            first_name,
-            last_name,
-            email,
-            phone,
-            birth_date,
-            hire_date,
-            job_title,
-            salary,
-            status,
-            department_id
-        } = req.body;
-
-        const query = `
-            INSERT INTO Employees 
-            (first_name, last_name, email, phone, birth_date, hire_date, job_title, salary, status, department_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-        `;
-
-        await db.query(query, [
-            first_name,
-            last_name,
-            email,
-            phone,
-            birth_date,
-            hire_date,
-            job_title,
-            salary,
-            status,
-            department_id
-        ]);
-
-        return res.redirect('/employees');
-    } catch (err) {
-        console.error("Error inserting employee:", err);
-        return res.status(500).send("Error adding employee");
-    }
-});
-
-// Employee Update
-app.get('/employees/edit/:id', async (req, res) => {
-  const employeeId = req.params.id;
-
   try {
-      const [[employee]] = await db.query(
-          'SELECT * FROM Employees WHERE employee_id = ?',
-          [employeeId]
-      );
-      const [departments] = await db.query('SELECT * FROM Departments');
-
-      if (!employee) {
-          return res.status(404).send("Employee not found");
-      }
-
-      res.render('edit-employee', { employee, departments });
-
+    const { first_name, last_name, email, phone, birth_date, hire_date, job_title, salary, status, department_id } = req.body;
+    await db.query('CALL sp_insert_employee(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [first_name, last_name, email, phone, birth_date, hire_date, job_title, salary, status, department_id]);
+    res.redirect('/employees');
   } catch (err) {
-      console.error("Error loading employee for edit:", err);
-      return res.status(500).send("Error loading employee");
+    console.error("Error inserting employee:", err);
+    res.status(500).send("Error adding employee");
   }
 });
 
-// Handle form submission
+app.get('/employees/:id/json', async (req, res) => {
+  const employeeId = req.params.id;
+  try {
+    const [rows] = await db.query('SELECT * FROM Employees WHERE employee_id = ?', [employeeId]);
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Error fetching employee:", err);
+    res.status(500).send("Error fetching employee data");
+  }
+});
+
 app.post('/employees/edit/:id', async (req, res) => {
-  const employeeId = req.params.id;
-
   try {
-      const {
-          first_name,
-          last_name,
-          email,
-          phone,
-          birth_date,
-          hire_date,
-          job_title,
-          salary,
-          status,
-          department_id
-      } = req.body;
-
-      const query = `
-          UPDATE Employees SET
-              first_name = ?,
-              last_name = ?,
-              email = ?,
-              phone = ?,
-              birth_date = ?,
-              hire_date = ?,
-              job_title = ?,
-              salary = ?,
-              status = ?,
-              department_id = ?
-          WHERE employee_id = ?
-      `;
-
-      await db.query(query, [
-          first_name,
-          last_name,
-          email,
-          phone,
-          birth_date,
-          hire_date,
-          job_title,
-          salary,
-          status,
-          department_id,
-          employeeId
-      ]);
-
-      res.redirect('/employees');
+    const employeeId = req.params.id;
+    const { first_name, last_name, email, phone, birth_date, hire_date, job_title, salary, status, department_id } = req.body;
+    await db.query('CALL sp_update_employee(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [employeeId, first_name, last_name, email, phone, birth_date, hire_date, job_title, salary, status, department_id]);
+    res.redirect('/employees');
   } catch (err) {
-      console.error("Error updating employee:", err);
-      res.status(500).send("Error updating employee");
+    console.error("Error updating employee:", err);
+    res.status(500).send("Error updating employee");
   }
 });
 
-// Employee Delete
 app.post('/employees/:id/delete', async (req, res) => {
-  const employeeId = req.params.id;
-
   try {
-    await db.query("CALL sp_delete_employee(?)", [employeeId]);
+    await db.query("CALL sp_delete_employee(?)", [req.params.id]);
     res.redirect('/employees');
   } catch (err) {
     console.error("Error deleting employee:", err);
@@ -205,9 +126,7 @@ app.post('/employees/:id/delete', async (req, res) => {
   }
 });
 
-  
 // Departments route
-
 app.get('/departments', async function (req, res) {
   try {
     const [rows] = await db.query(`
@@ -260,31 +179,41 @@ app.get('/departments', async function (req, res) {
   }
 });
 
-app.post('/departments', async function(req, res) {
-    const { name, manager_name, budget } = req.body;
+app.post('/departments', async (req, res) => {
+  try {
+    await db.query('CALL sp_insert_department(?, ?)', [req.body.name, req.body.budget]);
+    res.redirect('/departments');
+  } catch (err) {
+    console.error("Error inserting department:", err);
+    res.status(500).send("Error inserting department.");
+  }
+});
 
-    try {
-        await db.query(
-            "INSERT INTO Departments (name, budget) VALUES (?, ?)",
-            [name, budget]
-        );
-        res.redirect('/departments');
-    } catch (err) {
-        console.error("Error inserting department:", err);
-        res.status(500).send("Error inserting department.");
-    }
+app.get('/departments/:id/json', async (req, res) => {
+  const [rows] = await db.query('SELECT * FROM Departments WHERE department_id = ?', [req.params.id]);
+  res.json(rows[0]);
+});
+
+app.post('/departments/edit/:id', async (req, res) => {
+  try {
+    const departmentId = req.params.id;
+    const { department_name, budget } = req.body;
+    await db.query('CALL sp_update_department(?, ?, ?)', [departmentId, department_name, budget]);
+    res.redirect('/departments');
+  } catch (err) {
+    console.error("Error updating department:", err);
+    res.status(500).send("Error updating department");
+  }
 });
 
 app.post('/delete-department/:id', async (req, res) => {
-    const deptId = req.params.id;
-
-    try {
-      await db.query('CALL sp_delete_department(?)', [deptId]);
-      res.redirect('/departments');
-    } catch (err) {
-      console.error('Failed to delete department:', err);
-      res.status(500).send('Error deleting department');
-    }
+  try {
+    await db.query('CALL sp_delete_department(?)', [req.params.id]);
+    res.redirect('/departments');
+  } catch (err) {
+    console.error("Error deleting department:", err);
+    res.status(500).send("Error deleting department.");
+  }
 });
 
 // Benefits route
@@ -299,34 +228,27 @@ app.get('/benefits', async function (req, res) {
 });
 
 app.post('/benefits', async (req, res) => {
+  try {
     const { benefit_name, description, cost, provider } = req.body;
-  
-    try {
-      const insertQuery = `
-        INSERT INTO Benefits (benefit_name, description, cost, provider)
-        VALUES (?, ?, ?, ?)
-      `;
-      await db.query(insertQuery, [benefit_name, description, cost, provider]);
-      res.redirect('/benefits');
-    } catch (err) {
-      console.error('Error inserting benefit:', err);
-      res.status(500).send('Error adding benefit');
-    }
-  });
+    await db.query('CALL sp_insert_benefit(?, ?, ?, ?)', [benefit_name, description, cost, provider]);
+    res.redirect('/benefits');
+  } catch (err) {
+    console.error("Error inserting benefit:", err);
+    res.status(500).send("Error adding benefit");
+  }
+});
 
 app.post('/delete-benefit/:id', async (req, res) => {
-    const benefit_id = req.params.id;
-
-    try {
-      await db.query('CALL sp_delete_benefit(?)', [benefit_id]);
-      res.redirect('/benefits');
-    } catch (error) {
-      console.error('Failed to delete benefit:', error);
-      res.status(500).send('An error occurred while deleting the benefit.');
-    }
+  try {
+    await db.query('CALL sp_delete_benefit(?)', [req.params.id]);
+    res.redirect('/benefits');
+  } catch (err) {
+    console.error("Error deleting benefit:", err);
+    res.status(500).send("Error deleting benefit.");
+  }
 });
-  
-// Payolls route
+
+// Payrolls route
 app.get('/payrolls', async (req, res) => {
     try {
       const [payrolls] = await db.query(`
@@ -340,22 +262,19 @@ app.get('/payrolls', async (req, res) => {
       res.status(500).send('Error loading payrolls page');
     }
   });
-  
-  app.post('/payrolls', async (req, res) => {
+
+app.post('/payrolls', async (req, res) => {
+  try {
     const { pay_period, pay_date, gross_pay, deduction, net_pay, employee_id } = req.body;
-    try {
-      await db.query(
-        'INSERT INTO Payrolls (pay_period, pay_date, gross_pay, deduction, net_pay, employee_id) VALUES (?, ?, ?, ?, ?, ?)',
-        [pay_period, pay_date, gross_pay || null, deduction || null, net_pay || null, employee_id]
-      );
-      res.redirect('/payrolls');
-    } catch (err) {
-      console.error('Error adding payroll:', err);
-      res.status(500).send('Error adding payroll');
-    }
-  });
-  
-  // Time Offs route
+    await db.query('CALL sp_insert_payroll(?, ?, ?, ?, ?, ?)', [pay_period, pay_date, gross_pay, deduction, net_pay, employee_id]);
+    res.redirect('/payrolls');
+  } catch (err) {
+    console.error('Error adding payroll:', err);
+    res.status(500).send('Error adding payroll');
+  }
+});
+
+// Time Offs route
 app.get('/timeoffs', async (req, res) => {
     try {
       const [timeoffs] = await db.query(`
@@ -370,21 +289,19 @@ app.get('/timeoffs', async (req, res) => {
     }
   });
   
-  app.post('/timeoffs', async (req, res) => {
-    const { start_date, end_date, status, reason, employee_id } = req.body;
-    try {
-      await db.query(
-        'INSERT INTO Time_Offs (start_date, end_date, status, reason, employee_id) VALUES (?, ?, ?, ?, ?)',
-        [start_date, end_date, status, reason, employee_id]
-      );
-      res.redirect('/timeoffs');
-    } catch (err) {
-      console.error('Error submitting time off request:', err);
-      res.status(500).send('Error submitting time off request');
-    }
-  });
 
-  // Employee Benefits
+app.post('/timeoffs', async (req, res) => {
+  try {
+    const { start_date, end_date, status, reason, employee_id } = req.body;
+    await db.query('CALL sp_insert_time_off(?, ?, ?, ?, ?)', [start_date, end_date, status, reason, employee_id]);
+    res.redirect('/timeoffs');
+  } catch (err) {
+    console.error('Error submitting time off request:', err);
+    res.status(500).send('Error submitting time off request');
+  }
+});
+
+// Employee Benefits
   app.get('/employee_benefits', async (req, res) => {
     try {
       // Fetch employee-benefit relationships
@@ -445,28 +362,11 @@ app.get('/timeoffs', async (req, res) => {
       res.status(500).send("Error loading employee benefits");
     }
   });
-  
 
 app.post('/employee_benefits', async (req, res) => {
-  const { employee_id, benefit_id } = req.body;
-
   try {
-    // Check if this relationship already exists to prevent duplicates
-    const [existing] = await db.query(`
-      SELECT * FROM Employee_Benefits
-      WHERE employee_id = ? AND benefit_id = ?
-    `, [employee_id, benefit_id]);
-
-    if (existing.length > 0) {
-      return res.status(400).send("This benefit is already assigned to the employee.");
-    }
-
-    // Insert into the M:M relationship table
-    await db.query(`
-      INSERT INTO Employee_Benefits (employee_id, benefit_id)
-      VALUES (?, ?)
-    `, [employee_id, benefit_id]);
-
+    const { employee_id, benefit_id } = req.body;
+    await db.query('CALL sp_insert_employee_benefit(?, ?)', [employee_id, benefit_id]);
     res.redirect('/employee_benefits');
   } catch (err) {
     console.error("Error inserting employee benefit:", err);
@@ -474,15 +374,10 @@ app.post('/employee_benefits', async (req, res) => {
   }
 });
 
-app.post('/employee_benefits/edit/:old_benefit_id', async (req, res) => {
-  const { employee_id, new_benefit_id } = req.body;
-  const { old_benefit_id } = req.params;
-
+app.post('/employee_benefits/edit/:id', async (req, res) => {
   try {
-    await db.query(`
-      CALL sp_update_employee_benefit(?, ?, ?)
-    `, [employee_id, old_benefit_id, new_benefit_id]);
-
+    const { employee_benefits_id, new_employee_id, new_benefit_id } = req.body;
+    await db.query('CALL sp_update_employee_benefit(?, ?, ?)', [employee_benefits_id, new_employee_id, new_benefit_id]);
     res.redirect('/employee_benefits');
   } catch (err) {
     console.error("Error updating employee benefit:", err);
@@ -491,14 +386,8 @@ app.post('/employee_benefits/edit/:old_benefit_id', async (req, res) => {
 });
 
 app.post('/employee_benefits/delete/:benefit_id', async (req, res) => {
-  const { employee_id } = req.body;
-  const { benefit_id } = req.params;
-
   try {
-    await db.query(`
-      CALL sp_delete_employee_benefit(?, ?)
-    `, [employee_id, benefit_id]);
-
+    await db.query('CALL sp_delete_employee_benefit(?, ?)', [req.body.employee_id, req.params.benefit_id]);
     res.redirect('/employee_benefits');
   } catch (err) {
     console.error("Error deleting employee benefit:", err);

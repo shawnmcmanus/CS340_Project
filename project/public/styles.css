@@ -1,0 +1,150 @@
+/* SOURCE: Asked ChatGPT to help assist with a friendlier style */
+/* styles.css */
+
+
+/* Reset + Base */
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+
+  nav {
+    background-color: #333;
+    padding: 10px;
+  }
+
+  nav a {
+    color: white;
+    margin-right: 15px;
+    text-decoration: none;
+  }
+
+  nav a:hover {
+    text-decoration: underline;
+  }
+
+  .container {
+    padding: 20px;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  th.actions-header,
+  td.actions-cell {
+    max-width: 150px;  /* or whatever fits nicely */
+    white-space: nowrap; /* prevent buttons from wrapping */
+    padding: 6px 8px; /* consistent with other cells */
+    vertical-align: middle;
+  }
+  
+  td.actions-cell form {
+    margin: 0;
+    padding: 0;
+    display: inline; /* inline instead of inline-block, so no extra box */
+    background: transparent; /* remove background */
+  }
+  
+  td ul {
+    margin: 0;
+    padding-left: 20px; /* or reduce as you want */
+    list-style: disc; /* or none if you want */
+  }
+  
+  td ul li {
+    margin: 0;
+    padding: 2px 0;
+  }
+  
+  /* Form Styling */
+  form {
+    width: 90%;
+    max-width: 600px;
+    margin: 20px auto;
+    background: white;
+    padding: 20px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  }
+
+  form.reset {
+    background: none;
+  }
+  
+  form label {
+    display: block;
+    font-weight: bold;
+  }
+  
+  form input,
+  form select {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  
+  /* Buttons */
+  .update-btn, .delete-btn {
+    border: none;
+    padding: 8px 14px;
+    font-size: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    white-space: nowrap;
+    box-sizing: border-box;
+  }
+  
+  /* Specific colors */
+  .update-btn {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .update-btn:hover {
+    background-color: #0069d9;
+  }
+  
+  .delete-btn {
+    background-color: #dc3545;
+    color: white;
+  }
+  
+  .delete-btn:hover {
+    background-color: #c82333;
+  }
+  
+  /* Modal (if you use one) */
+  #modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    display: none;
+    z-index: 999;
+  }
+  
+  #editModal {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+  }
+  
+  

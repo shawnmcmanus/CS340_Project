@@ -1,4 +1,8 @@
+<!-- SOURCE: Used ChatGPT to help with formatting and the update form -->
+<!-- Employees Page -->
+
 <h1>Employees</h1>
+
 <table border="1" cellpadding="8" cellspacing="0">
   <thead>
     <tr>
@@ -13,7 +17,7 @@
       <th>Salary</th>
       <th>Status</th>
       <th>Department ID</th>
-      <th>Actions</th>
+      <th class="actions-header">Actions</th>
     </tr>
   </thead>
   <tbody>
@@ -30,14 +34,11 @@
       <td>{{salary}}</td>
       <td>{{status}}</td>
       <td>{{department_id}}</td>
-      <td>
-        <a href="/employees/edit/{{employee_id}}">
-          <button type="button">Update</button>
-        </a>
+      <td class="actions-cell">
+        <button class="update-btn" data-id="{{employee_id}}" type="button">Update</button>
 
-        <form action="/employees/{{employee_id}}/delete" method="POST" style="display:inline;" 
-        onsubmit="return confirm('Are you sure you want to delete this employee?');">
-          <button type="submit">Delete</button>
+        <form action="/employees/{{employee_id}}/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this employee?');">
+          <button class="delete-btn" type="submit">Delete</button>
         </form>
       </td>
     </tr>
@@ -45,6 +46,8 @@
   </tbody>
 </table>
 
+
+<!-- Add New Employee Section -->
 <h2>Add New Employee</h2>
 <form action="/employees" method="POST">
   <label>First Name: <input type="text" name="first_name" required></label><br>
@@ -69,3 +72,95 @@
   <button type="submit">Add Employee</button>
 </form>
 
+
+<!-- Showcases Edit Employee Form -->
+<div id="modalOverlay" style="display: none;">
+  <div id="editModal">
+    <form id="editForm" method="POST">
+      <h2>Edit Employee</h2>
+
+      <input type="hidden" name="employee_id" id="edit-id">
+
+      <label>First Name:</label>
+      <input type="text" name="first_name" id="edit-first-name" required>
+
+      <label>Last Name:</label>
+      <input type="text" name="last_name" id="edit-last-name" required>
+
+      <label>Email:</label>
+      <input type="email" name="email" id="edit-email" required>
+
+      <label>Phone:</label>
+      <input type="text" name="phone" id="edit-phone" required>
+
+      <label>Birth Date:</label>
+      <input type="date" name="birth_date" id="edit-birth-date" required>
+
+      <label>Hire Date:</label>
+      <input type="date" name="hire_date" id="edit-hire-date" required>
+
+      <label>Job Title:</label>
+      <input type="text" name="job_title" id="edit-job-title" required>
+
+      <label>Salary:</label>
+      <input type="number" name="salary" id="edit-salary" required>
+
+      <label>Status:</label>
+      <input type="text" name="status" id="edit-status" required>
+
+      <label>Department:</label>
+      <select name="department_id" id="edit-department-id" required>
+        {{#each departments}}
+          <option value="{{department_id}}">{{name}}</option>
+        {{/each}}
+      </select>
+
+      <div style="margin-top: 20px;">
+        <button type="submit">Save</button>
+        <button type="button" id="closeModalBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- Handles Update Info -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('modalOverlay');
+    const editForm = document.getElementById('editForm');
+    const closeBtn = document.getElementById('closeModalBtn');
+
+    document.querySelectorAll('.update-btn').forEach(button => {
+      button.addEventListener('click', async () => {
+        const employeeId = button.dataset.id;
+
+        try {
+          const res = await fetch(`/employees/${employeeId}/json`);
+          const employee = await res.json();
+
+          editForm.action = `/employees/edit/${employeeId}`;
+          document.getElementById('edit-id').value = employeeId;
+          document.getElementById('edit-first-name').value = employee.first_name;
+          document.getElementById('edit-last-name').value = employee.last_name;
+          document.getElementById('edit-email').value = employee.email;
+          document.getElementById('edit-phone').value = employee.phone;
+          document.getElementById('edit-birth-date').value = employee.birth_date.split('T')[0];
+          document.getElementById('edit-hire-date').value = employee.hire_date.split('T')[0];
+          document.getElementById('edit-job-title').value = employee.job_title;
+          document.getElementById('edit-salary').value = employee.salary;
+          document.getElementById('edit-status').value = employee.status;
+          document.getElementById('edit-department-id').value = employee.department_id;
+
+          modal.style.display = 'block';
+        } catch (err) {
+          console.error('Failed to load employee for editing:', err);
+        }
+      });
+    });
+
+    closeBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+  });
+</script>
